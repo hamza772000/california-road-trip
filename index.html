@@ -3,16 +3,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>California Road Trip — 18 Days</title>
 <style>
-  :root{ --bg:#070b1c; }
-  html,body{margin:0;background:radial-gradient(120% 90% at 30% 10%, #0d1530 0%, #070b1c 55%, #04060f 100%);}
-  .wrap{max-width:960px;margin:0 auto;padding:18px 14px 30px;}
+  :root{ --gold:#ffcb6b; --coast:#56e0c4; --sierra:#93e05a; --park:#b9a3ff; }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(120% 90% at 30% 8%, #0d1530 0%, #070b1c 55%, #04060f 100%);
+    font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;color:#cdd8f2;}
+  .wrap{max-width:980px;margin:0 auto;padding:16px 14px 40px;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:2px 2px 12px;}
+  .hint{font-size:13px;color:#8b99c2;letter-spacing:.2px;}
+  .btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+  button{font-family:inherit;font-size:13px;font-weight:600;color:#dfe7fb;background:rgba(30,42,76,.7);
+    border:1px solid rgba(120,140,190,.28);border-radius:999px;padding:8px 14px;cursor:pointer;transition:.15s;}
+  button:hover{background:rgba(46,62,108,.8);border-color:rgba(150,170,220,.45);}
+  button:active{transform:translateY(1px);}
+  button.toggle.on{background:rgba(239,169,64,.18);border-color:rgba(239,169,64,.6);color:#ffdca0;}
+  .stage{position:relative;}
   svg{width:100%;height:auto;display:block;border-radius:16px;
       box-shadow:0 30px 80px -30px rgba(0,0,0,.9), inset 0 0 0 1px rgba(120,140,190,.10);}
-  .ml{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
-  text{font-family:"Avenir Next","Helvetica Neue",Arial,sans-serif;}
+  .ml{font-family:inherit;}
   .place{font-size:13.5px;font-weight:600;fill:#cdd8f2;letter-spacing:.3px;
          paint-order:stroke;stroke:#05080f;stroke-width:3px;stroke-linejoin:round;}
-  .sub{font-size:10.5px;font-weight:600;fill:#8f9cc2;letter-spacing:.3px;
+  .sub{font-size:10.5px;font-weight:600;fill:#94a2c8;letter-spacing:.3px;
        paint-order:stroke;stroke:#05080f;stroke-width:3px;}
   .anchor-label{font-size:17px;font-weight:800;fill:#ffe2ab;letter-spacing:.6px;
          paint-order:stroke;stroke:#05080f;stroke-width:3.5px;}
@@ -20,132 +30,270 @@
   .ghost{fill:#33406e;font-weight:800;letter-spacing:7px;}
   .title{fill:#f4ecd8;font-weight:800;letter-spacing:1.2px;}
   .tsub{fill:#9fb0d8;font-weight:600;letter-spacing:.6px;}
-  .lg{fill:#c6d2ee;font-size:13px;font-weight:600;letter-spacing:.2px;}
+  .lg{fill:#c6d2ee;font-size:13px;font-weight:600;}
+  /* interactive */
+  .node{cursor:pointer;outline:none;}
+  .node .hit{fill:transparent;}
+  .node .ring{fill:none;stroke:#ffe2ab;stroke-width:2;opacity:0;transition:opacity .18s;}
+  .node.sel .ring{opacity:.95;}
+  .node:focus-visible .ring{opacity:.6;stroke:#fff;}
+  #nodeLayer.has-sel .node:not(.sel){opacity:.4;transition:opacity .18s;}
+  .leg{stroke:#ffe2ab;stroke-width:4;fill:none;opacity:0;stroke-linecap:round;transition:opacity .2s;}
+  .leg.on{opacity:.95;}
+  .llab{font-size:12px;font-weight:700;fill:#10162c;}
+  .llab-bg{fill:#ffe2ab;rx:7;}
+  #allLegs{opacity:0;transition:opacity .2s;pointer-events:none;}
+  #allLegs.on{opacity:1;}
+  #allLegs .llab{fill:#0a1024;} #allLegs .llab-bg{fill:#e9c074;opacity:.95;}
   @media (prefers-reduced-motion: reduce){ #pulse{display:none;} }
+  /* panel */
+  .panel{margin-top:14px;background:rgba(11,17,36,.92);border:1px solid rgba(120,140,190,.22);
+    border-radius:16px;padding:16px 18px;box-shadow:0 20px 50px -30px rgba(0,0,0,.8);}
+  .p-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .p-name{font-size:21px;font-weight:800;letter-spacing:.3px;}
+  .chip{font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;
+    border:1px solid currentColor;white-space:nowrap;}
+  .p-dates{font-size:13px;color:#8b99c2;font-weight:600;}
+  .p-blurb{margin:11px 0 4px;font-size:14.5px;line-height:1.5;color:#bcc8e6;}
+  .drow{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;margin-top:9px;
+    padding-top:11px;border-top:1px solid rgba(120,140,190,.14);}
+  .drow .ic{flex:none;margin-top:1px;opacity:.85;}
+  .drow b{color:#e7eefc;font-weight:700;}
+  .dlabel{color:#8b99c2;font-weight:700;margin-right:2px;}
+  .via{color:#7e8cb4;}
+  .sleep{margin-top:9px;font-size:13px;color:#b9a3ff;font-weight:600;}
+  .p-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;
+    padding-top:12px;border-top:1px solid rgba(120,140,190,.14);}
+  .counter{font-size:12.5px;color:#8b99c2;font-weight:600;letter-spacing:.3px;}
 </style>
 <div class="wrap">
-<svg viewBox="0 0 1000 1189" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" aria-label="Stylized map of an 18-day California road trip loop">
-  <defs>
-    <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0a1736"/>
-      <stop offset="1" stop-color="#070d22"/>
-    </linearGradient>
-    <radialGradient id="vig" cx="32%" cy="12%" r="95%">
-      <stop offset="0" stop-color="#0e1733" stop-opacity="0"/>
-      <stop offset="1" stop-color="#03050d" stop-opacity=".9"/>
-    </radialGradient>
-    <filter id="routeGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5.5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="dotGlow" x="-120%" y="-120%" width="340%" height="340%">
-      <feGaussianBlur stdDeviation="3.4" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-  </defs>
+  <div class="toolbar">
+    <span class="hint">Tap any stop on the map for details · drive times included</span>
+    <div class="btns">
+      <button id="prev" aria-label="Previous stop">‹ Prev</button>
+      <button id="next" aria-label="Next stop">Next ›</button>
+      <button id="toggleAll" class="toggle" aria-pressed="false">Show all drive times</button>
+    </div>
+  </div>
 
-  <!-- base -->
-  <rect x="0" y="0" width="1000" height="1189" fill="#070b1c"/>
-  <!-- ocean wedge (west of the coast) -->
-  <path d="M0,0 L150,250 L232,505 L246,575 L470,860 L300,1189 L0,1189 Z" fill="url(#ocean)" opacity="0.85"/>
-  <!-- faint coastline -->
-  <path d="M150,250 L232,505 L246,575 L470,860 L520,1189" fill="none" stroke="#23407a" stroke-opacity=".5" stroke-width="2"/>
+  <div class="stage">
+  <svg id="map" viewBox="0 0 1000 1189" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Interactive map of an 18-day California road trip loop">
+    <defs>
+      <linearGradient id="ocean" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0a1736"/><stop offset="1" stop-color="#070d22"/>
+      </linearGradient>
+      <radialGradient id="vig" cx="32%" cy="12%" r="95%">
+        <stop offset="0" stop-color="#0e1733" stop-opacity="0"/>
+        <stop offset="1" stop-color="#03050d" stop-opacity=".9"/>
+      </radialGradient>
+      <filter id="routeGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="5.5" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="dotGlow" x="-120%" y="-120%" width="340%" height="340%">
+        <feGaussianBlur stdDeviation="3.2" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
 
-  <!-- faint graticule -->
-  <g stroke="#5e6f9e" stroke-opacity="0.06" stroke-width="1">
-    <line x1="250" y1="0" x2="250" y2="1189"/><line x1="450" y1="0" x2="450" y2="1189"/>
-    <line x1="650" y1="0" x2="650" y2="1189"/><line x1="850" y1="0" x2="850" y2="1189"/>
-    <line x1="0" y1="300" x2="1000" y2="300"/><line x1="0" y1="550" x2="1000" y2="550"/>
-    <line x1="0" y1="800" x2="1000" y2="800"/><line x1="0" y1="1050" x2="1000" y2="1050"/>
-  </g>
+    <rect x="0" y="0" width="1000" height="1189" fill="#070b1c"/>
+    <path d="M0,0 L150,250 L232,505 L246,575 L470,860 L300,1189 L0,1189 Z" fill="url(#ocean)" opacity="0.85"/>
+    <path d="M150,250 L232,505 L246,575 L470,860 L520,1189" fill="none" stroke="#23407a" stroke-opacity=".5" stroke-width="2"/>
+    <g stroke="#5e6f9e" stroke-opacity="0.06" stroke-width="1">
+      <line x1="250" y1="0" x2="250" y2="1189"/><line x1="450" y1="0" x2="450" y2="1189"/>
+      <line x1="650" y1="0" x2="650" y2="1189"/><line x1="850" y1="0" x2="850" y2="1189"/>
+      <line x1="0" y1="300" x2="1000" y2="300"/><line x1="0" y1="550" x2="1000" y2="550"/>
+      <line x1="0" y1="800" x2="1000" y2="800"/><line x1="0" y1="1050" x2="1000" y2="1050"/>
+    </g>
+    <text class="ghost ml" x="300" y="800" font-size="33" transform="rotate(-56 300 800)" opacity=".55">PACIFIC COAST</text>
+    <text class="ghost ml" x="918" y="770" font-size="25" transform="rotate(-90 918 770)" opacity=".6">HIGHWAY 395</text>
+    <text class="ghost ml" x="438" y="470" font-size="22" text-anchor="middle" opacity=".42">SIERRA NEVADA</text>
+    <text class="ghost ml" x="565" y="715" font-size="18" text-anchor="middle" opacity=".38">CENTRAL VALLEY</text>
 
-  <!-- ghost labels -->
-  <text class="ghost ml" x="300" y="800" font-size="33" transform="rotate(-56 300 800)" opacity=".55">PACIFIC COAST</text>
-  <text class="ghost ml" x="918" y="770" font-size="25" transform="rotate(-90 918 770)" opacity=".6">HIGHWAY 395</text>
-  <text class="ghost ml" x="438" y="470" font-size="22" text-anchor="middle" opacity=".42">SIERRA NEVADA</text>
-  <text class="ghost ml" x="565" y="715" font-size="18" text-anchor="middle" opacity=".38">CENTRAL VALLEY</text>
+    <path id="route" fill="none" stroke-linejoin="round" stroke-linecap="round"
+      d="M142.6,259.4 L231.1,504.3 L226.3,513.7 L229.9,552.0 L245.7,573.0 L601.5,958.6 L846.7,1035.4 L877.3,503.1 L821.2,345.2 L743.4,297.8 L723.9,285.8 L713.8,217.0 L610.3,352.7 L725.5,475.0 L761.1,508.2 L142.6,259.4 Z"
+      stroke="#e9a040" stroke-width="3.4" opacity=".9" filter="url(#routeGlow)"/>
+    <path fill="none" stroke="#ffd79a" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" opacity=".85"
+      d="M142.6,259.4 L231.1,504.3 L226.3,513.7 L229.9,552.0 L245.7,573.0 L601.5,958.6 L846.7,1035.4 L877.3,503.1 L821.2,345.2 L743.4,297.8 L723.9,285.8 L713.8,217.0 L610.3,352.7 L725.5,475.0 L761.1,508.2 L142.6,259.4 Z"/>
 
-  <!-- ROUTE -->
-  <path id="route" fill="none" stroke-linejoin="round" stroke-linecap="round"
-    d="M142.6,259.4 L231.1,504.3 L226.3,513.7 L229.9,552.0 L245.7,573.0 L601.5,958.6 L846.7,1035.4 L877.3,503.1 L821.2,345.2 L743.4,297.8 L723.9,285.8 L713.8,217.0 L610.3,352.7 L725.5,475.0 L761.1,508.2 L142.6,259.4 Z"
-    stroke="#e9a040" stroke-width="3.4" opacity=".95" filter="url(#routeGlow)"/>
-  <path fill="none" stroke="#ffd79a" stroke-width="1.2" stroke-linejoin="round" stroke-linecap="round" opacity=".9"
-    d="M142.6,259.4 L231.1,504.3 L226.3,513.7 L229.9,552.0 L245.7,573.0 L601.5,958.6 L846.7,1035.4 L877.3,503.1 L821.2,345.2 L743.4,297.8 L723.9,285.8 L713.8,217.0 L610.3,352.7 L725.5,475.0 L761.1,508.2 L142.6,259.4 Z"/>
+    <g id="legHi"><path id="legLine" class="leg" filter="url(#routeGlow)"></path></g>
+    <circle id="pulse" r="4.4" fill="#fff4dc" filter="url(#dotGlow)">
+      <animateMotion dur="17s" repeatCount="indefinite" rotate="auto" calcMode="linear">
+        <mpath href="#route"/>
+      </animateMotion>
+    </circle>
 
-  <!-- travelling light -->
-  <circle id="pulse" r="4.6" fill="#fff4dc" filter="url(#dotGlow)">
-    <animateMotion dur="16s" repeatCount="indefinite" rotate="auto" calcMode="linear">
-      <mpath xlink:href="#route"/>
-    </animateMotion>
-  </circle>
+    <g id="allLegs"></g>
+    <g id="nodeLayer"></g>
+    <g id="legLabel"></g>
 
-  <!-- NODES -->
-  <!-- coast -->
-  <g>
-    <circle cx="231.1" cy="504.3" r="5" fill="#56e0c4" filter="url(#dotGlow)"/>
-    <circle cx="226.3" cy="513.7" r="5" fill="#56e0c4" filter="url(#dotGlow)"/>
-    <circle cx="229.9" cy="552.0" r="5" fill="#56e0c4" filter="url(#dotGlow)"/>
-    <circle cx="245.7" cy="573.0" r="5" fill="#56e0c4" filter="url(#dotGlow)"/>
-    <circle cx="601.5" cy="958.6" r="5" fill="#56e0c4" filter="url(#dotGlow)"/>
-  </g>
-  <!-- sierra -->
-  <g>
-    <circle cx="877.3" cy="503.1" r="5" fill="#93e05a" filter="url(#dotGlow)"/>
-    <circle cx="821.2" cy="345.2" r="5" fill="#93e05a" filter="url(#dotGlow)"/>
-    <circle cx="743.4" cy="297.8" r="5" fill="#93e05a" filter="url(#dotGlow)"/>
-    <circle cx="723.9" cy="285.8" r="5" fill="#93e05a" filter="url(#dotGlow)"/>
-    <circle cx="713.8" cy="217.0" r="5" fill="#93e05a" filter="url(#dotGlow)"/>
-  </g>
-  <!-- parks -->
-  <g>
-    <circle cx="610.3" cy="352.7" r="6" fill="#b9a3ff" filter="url(#dotGlow)"/>
-    <circle cx="725.5" cy="475.0" r="6" fill="#b9a3ff" filter="url(#dotGlow)"/>
-    <circle cx="761.1" cy="508.2" r="6" fill="#b9a3ff" filter="url(#dotGlow)"/>
-  </g>
-  <!-- anchors -->
-  <g>
-    <circle cx="142.6" cy="259.4" r="9" fill="#ffcb6b" filter="url(#dotGlow)"/>
-    <circle cx="142.6" cy="259.4" r="3.4" fill="#3a2706"/>
-    <circle cx="846.7" cy="1035.4" r="9" fill="#ffcb6b" filter="url(#dotGlow)"/>
-    <circle cx="846.7" cy="1035.4" r="3.4" fill="#3a2706"/>
-  </g>
+    <text class="title ml" x="70" y="74" font-size="30">CALIFORNIA ROAD TRIP</text>
+    <text class="tsub ml" x="71" y="104" font-size="14.5">18-day San Francisco loop · Coast · Eastern Sierra · Yosemite · Sequoia</text>
+    <text class="tsub ml" x="71" y="126" font-size="12.5" fill="#7f8fbb">≈ 1,400 miles · 18 Aug – 5 Sep</text>
 
-  <!-- LABELS -->
-  <text class="anchor-label" x="158" y="250" text-anchor="start">SAN FRANCISCO</text>
-  <text class="anchor-label" x="831" y="1041" text-anchor="end">LOS ANGELES</text>
+    <g>
+      <rect x="58" y="1000" width="292" height="176" rx="14" fill="rgba(9,14,30,.72)" stroke="rgba(120,140,190,.22)"/>
+      <text class="ml" x="80" y="1030" font-size="11" letter-spacing="3" fill="#8694bd">LEGEND</text>
+      <circle cx="86" cy="1056" r="6.5" fill="#ffcb6b"/><text class="lg" x="104" y="1061">Start / end — SF &amp; LA</text>
+      <circle cx="86" cy="1086" r="5.5" fill="#56e0c4"/><text class="lg" x="104" y="1091">Pacific Coast Highway</text>
+      <circle cx="86" cy="1116" r="5.5" fill="#93e05a"/><text class="lg" x="104" y="1121">Eastern Sierra · Hwy 395</text>
+      <circle cx="86" cy="1146" r="6" fill="#b9a3ff"/><text class="lg" x="104" y="1151">Yosemite &amp; Sequoia</text>
+    </g>
 
-  <text class="place" x="219" y="501" text-anchor="end">Monterey</text>
-  <text class="place" x="214" y="527" text-anchor="end">Carmel</text>
-  <text class="place" x="218" y="558" text-anchor="end">Bixby Bridge</text>
-  <text class="place" x="234" y="591" text-anchor="end">Big Sur</text>
-  <text class="place" x="588" y="954" text-anchor="end">Santa Barbara</text>
+    <rect x="0" y="0" width="1000" height="1189" fill="url(#vig)" pointer-events="none"/>
+  </svg>
+  </div>
 
-  <text class="place" x="890" y="507" text-anchor="start">Lone Pine</text>
-  <text class="place" x="834" y="349" text-anchor="start">Bishop</text>
-  <text class="place" x="755" y="312" text-anchor="start">Convict Lake</text>
-  <text class="place" x="712" y="282" text-anchor="end">Mammoth Lakes</text>
-  <text class="place" x="726" y="214" text-anchor="start">Mono Lake</text>
-
-  <text class="place park-label" x="598" y="349" text-anchor="end">Oakhurst</text>
-  <text class="sub" x="598" y="364" text-anchor="end">Yosemite day tour</text>
-  <text class="place park-label" x="738" y="473" text-anchor="start">Kings Canyon</text>
-  <text class="place park-label" x="774" y="520" text-anchor="start">Sequoia</text>
-
-  <!-- TITLE -->
-  <text class="title ml" x="70" y="74" font-size="30">CALIFORNIA ROAD TRIP</text>
-  <text class="tsub ml" x="71" y="104" font-size="14.5">18-day San Francisco loop · Coast · Eastern Sierra · Yosemite · Sequoia</text>
-  <text class="tsub ml" x="71" y="126" font-size="12.5" fill="#7f8fbb">≈ 1,500 miles · 18 Aug – 5 Sep</text>
-
-  <!-- LEGEND -->
-  <g>
-    <rect x="58" y="1000" width="292" height="176" rx="14" fill="rgba(9,14,30,.72)" stroke="rgba(120,140,190,.22)"/>
-    <text class="ml" x="80" y="1030" font-size="11" letter-spacing="3" fill="#8694bd">LEGEND</text>
-    <circle cx="86" cy="1056" r="6.5" fill="#ffcb6b"/><text class="lg" x="104" y="1061">Start / end — SF &amp; LA</text>
-    <circle cx="86" cy="1086" r="5.5" fill="#56e0c4"/><text class="lg" x="104" y="1091">Pacific Coast Highway</text>
-    <circle cx="86" cy="1116" r="5.5" fill="#93e05a"/><text class="lg" x="104" y="1121">Eastern Sierra · Hwy 395</text>
-    <circle cx="86" cy="1146" r="6" fill="#b9a3ff"/><text class="lg" x="104" y="1151">Yosemite &amp; Sequoia</text>
-  </g>
-
-  <rect x="0" y="0" width="1000" height="1189" fill="url(#vig)" pointer-events="none"/>
-</svg>
+  <div id="panel" class="panel" aria-live="polite"></div>
 </div>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const COL={anchor:"#ffcb6b",coast:"#56e0c4",sierra:"#93e05a",park:"#b9a3ff"};
+const RETURN={mi:270,time:"4h30",via:"via Fresno &amp; Pacheco Pass",note:"5 Sep · drive home — car back by 4pm, fly out 11pm"};
+
+const stops=[
+ {id:"sf",name:"San Francisco",x:142.6,y:259.4,cat:"anchor",type:"start",stay:"3 nights",dates:"18–20 Aug",
+  blurb:"Land at SFO around 3pm on 18 Aug. Ease off the flight, then Golden Gate, Alcatraz, cable cars and the Mission. Collect the car the morning you head off — and you loop back here to fly home on 5 Sep.",
+  lx:16,ly:-9,anc:"start",cls:"anchor-label"},
+ {id:"monterey",name:"Monterey",x:231.1,y:504.3,cat:"coast",type:"base",stay:"2 nights",dates:"21–22 Aug",
+  blurb:"Base for the Monterey Peninsula — the aquarium, 17-Mile Drive, Pebble Beach and Carmel.",
+  legIn:{from:"San Francisco",mi:120,time:"2h30",via:"via Santa Cruz &amp; Hwy 1"},lx:-12,ly:-3,anc:"end"},
+ {id:"carmel",name:"Carmel",x:226.3,y:513.7,cat:"coast",type:"sight",stay:"Scenic stop",
+  blurb:"Storybook village of fairy-tale cottages, galleries and a white-sand beach. Part of your Monterey days.",
+  legIn:{from:"Monterey",mi:5,time:"15 min"},sleep:"Sleeping in Monterey",lx:-12,ly:13,anc:"end"},
+ {id:"bixby",name:"Bixby Bridge",x:229.9,y:552.0,cat:"coast",type:"sight",stay:"Photo stop",
+  blurb:"The most photographed bridge on Highway 1 — best caught early, before the coastal haze rolls in.",
+  legIn:{from:"Carmel",mi:13,time:"25 min"},sleep:"Sleeping in Cambria / Morro Bay tonight",lx:-12,ly:6,anc:"end"},
+ {id:"bigsur",name:"Big Sur",x:245.7,y:573.0,cat:"coast",type:"sight",stay:"Scenic drive day",
+  blurb:"The cliff-and-ocean heart of the trip: McWay Falls, redwoods and endless pull-outs. Carry on to Hearst Castle (book ahead) and sleep in Cambria or Morro Bay.",
+  legIn:{from:"Bixby Bridge",mi:12,time:"20 min"},sleep:"Cambria / Morro Bay — 1 night, 23 Aug",lx:-12,ly:18,anc:"end"},
+ {id:"sb",name:"Santa Barbara",x:601.5,y:958.6,cat:"coast",type:"base",stay:"1 night",dates:"24 Aug",
+  blurb:"The “American Riviera” — red-tiled roofs, palm-lined beaches and State Street. A relaxed pause before LA.",
+  legIn:{from:"Big Sur",mi:200,time:"across 2 days",via:"via Hearst Castle, Morro Bay &amp; Solvang (overnight in Cambria)"},lx:-13,ly:-4,anc:"end"},
+ {id:"la",name:"Los Angeles",x:846.7,y:1035.4,cat:"anchor",type:"base",stay:"4 nights",dates:"25–28 Aug",
+  blurb:"Santa Monica &amp; Venice, Griffith Observatory, Hollywood, the Getty and a Disneyland day. Base west (Santa Monica) or central (West Hollywood).",
+  legIn:{from:"Santa Barbara",mi:95,time:"2h",via:"via Malibu &amp; the PCH"},lx:-16,ly:5,anc:"end",cls:"anchor-label"},
+ {id:"lonepine",name:"Lone Pine",x:877.3,y:503.1,cat:"sierra",type:"base",stay:"1 night",dates:"29 Aug",
+  blurb:"Gateway to the Alabama Hills — surreal boulders under Mt Whitney, where countless Westerns were shot. Pure magic at sunrise and sunset.",
+  legIn:{from:"Los Angeles",mi:210,time:"3h45",via:"Hwy 14 → 395"},lx:13,ly:4,anc:"start"},
+ {id:"bishop",name:"Bishop",x:821.2,y:345.2,cat:"sierra",type:"sight",stay:"Stop",
+  blurb:"Biggest town on the 395 — fuel, the famous Erick Schat’s bakery, and a launch point into the high country.",
+  legIn:{from:"Lone Pine",mi:60,time:"1h"},sleep:"Sleeping in Mammoth tonight",lx:13,ly:4,anc:"start"},
+ {id:"convict",name:"Convict Lake",x:743.4,y:297.8,cat:"sierra",type:"sight",stay:"Scenic stop",
+  blurb:"A jewel-blue alpine lake ringed by sheer peaks — an easy, stunning leg-stretch just off the highway.",
+  legIn:{from:"Bishop",mi:35,time:"40 min"},sleep:"Sleeping in Mammoth tonight",lx:12,ly:14,anc:"start"},
+ {id:"mammoth",name:"Mammoth Lakes",x:723.9,y:285.8,cat:"sierra",type:"base",stay:"2 nights",dates:"30–31 Aug",
+  blurb:"High alpine basecamp: the Lakes Basin, Devils Postpile, hot springs and the gorgeous June Lake Loop.",
+  legIn:{from:"Convict Lake",mi:10,time:"15 min"},lx:-12,ly:-4,anc:"end"},
+ {id:"mono",name:"Mono Lake",x:713.8,y:217.0,cat:"sierra",type:"sight",stay:"Stop · ~30 min",
+  blurb:"Eerie tufa towers rising from an ancient salt lake — the last stop before you climb Tioga Pass into Yosemite’s high country.",
+  legIn:{from:"Mammoth Lakes",mi:30,time:"35 min"},sleep:"Sleeping in Oakhurst tonight",lx:12,ly:-3,anc:"start"},
+ {id:"oakhurst",name:"Oakhurst",x:610.3,y:352.7,cat:"park",type:"base",stay:"2 nights",dates:"1–2 Sep",
+  blurb:"South-gateway base for your guided Yosemite Highlights tour (2 Sep) — Tunnel View, Glacier Point and the Valley, with no driving or parking stress.",
+  legIn:{from:"Mono Lake",mi:110,time:"~3h",via:"over Tioga Pass through Yosemite’s high country"},
+  sub:"Yosemite day tour",lx:-12,ly:-3,anc:"end",cls:"park"},
+ {id:"kingscanyon",name:"Kings Canyon",x:725.5,y:475.0,cat:"park",type:"base",stay:"2 nights",dates:"3–4 Sep",
+  blurb:"Base at Grant Grove. Drive the Kings Canyon Scenic Byway into one of the deepest canyons in North America, and walk among the giant sequoias.",
+  legIn:{from:"Oakhurst",mi:85,time:"2h",via:"via Fresno"},lx:13,ly:-2,anc:"start",cls:"park"},
+ {id:"sequoia",name:"Sequoia",x:761.1,y:508.2,cat:"park",type:"sight",stay:"Day trip",
+  blurb:"General Sherman — the largest living tree on Earth — and the climb up Moro Rock for a 360° Sierra panorama. An easy day from your Kings Canyon base.",
+  legIn:{from:"Kings Canyon",mi:28,time:"50 min"},sleep:"Sleeping at Kings Canyon (Grant Grove)",lx:13,ly:12,anc:"start",cls:"park"}
+];
+
+const svg=document.getElementById("map");
+const nodeLayer=document.getElementById("nodeLayer");
+const legLabel=document.getElementById("legLabel");
+const legLine=document.getElementById("legLine");
+const allLegs=document.getElementById("allLegs");
+const panel=document.getElementById("panel");
+let sel=0;
+
+function E(t,a={},txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;}
+
+// build nodes
+stops.forEach((s,i)=>{
+  const g=E("g",{class:"node",tabindex:"0",role:"button","aria-label":s.name});
+  g.appendChild(E("circle",{class:"hit",cx:s.x,cy:s.y,r:18}));
+  g.appendChild(E("circle",{class:"ring",cx:s.x,cy:s.y,r:(s.cat==="anchor"?13:11)}));
+  const r=s.cat==="anchor"?9:(s.cat==="park"?6:5);
+  g.appendChild(E("circle",{cx:s.x,cy:s.y,r:r,fill:COL[s.cat],filter:"url(#dotGlow)"}));
+  if(s.cat==="anchor") g.appendChild(E("circle",{cx:s.x,cy:s.y,r:3.4,fill:"#3a2706"}));
+  const lcls=(s.cls==="anchor-label")?"anchor-label":("place"+(s.cls==="park"?" park-label":""));
+  g.appendChild(E("text",{class:lcls,x:s.x+s.lx,y:s.y+s.ly,"text-anchor":s.anc},s.name));
+  if(s.sub) g.appendChild(E("text",{class:"sub",x:s.x+s.lx,y:s.y+s.ly+15,"text-anchor":s.anc},s.sub));
+  g.addEventListener("click",()=>select(i));
+  g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(i);}});
+  nodeLayer.appendChild(g);
+  s._g=g;
+});
+
+// "show all" leg labels (legs >= 25 mi + the drive home)
+function legText(s){ return s.id==="sb" ? "≈200 mi · 2 days" : (s.legIn.mi+" mi · "+s.legIn.time); }
+function placeLabel(layer,mx,my,text){
+  const w=text.length*6.7+16, h=20;
+  const grp=E("g",{});
+  grp.appendChild(E("rect",{class:"llab-bg",x:mx-w/2,y:my-h/2,width:w,height:h,rx:7}));
+  grp.appendChild(E("text",{class:"llab",x:mx,y:my+4,"text-anchor":"middle"},text));
+  layer.appendChild(grp);
+}
+stops.forEach((s,i)=>{
+  if(i===0||!s.legIn) return;
+  if(s.legIn.mi<25) return;
+  const p=stops[i-1];
+  placeLabel(allLegs,(p.x+s.x)/2,(p.y+s.y)/2,legText(s));
+});
+// drive home label (Sequoia -> SF)
+placeLabel(allLegs,(stops[14].x+stops[0].x)/2,(stops[14].y+stops[0].y)/2-2,RETURN.mi+" mi · "+RETURN.time);
+
+function drow(label,html,ic){
+  return `<div class="drow"><span class="ic">${ic}</span><div><span class="dlabel">${label}</span>${html}</div></div>`;
+}
+
+function select(i){
+  sel=i; const s=stops[i];
+  stops.forEach(o=>o._g.classList.remove("sel"));
+  s._g.classList.add("sel");
+  nodeLayer.classList.add("has-sel");
+
+  // highlight inbound leg (or the drive home for SF)
+  legLabel.innerHTML="";
+  let a,b,labelText;
+  if(i===0){ a=stops[14]; b=stops[0]; labelText=RETURN.mi+" mi · "+RETURN.time; }
+  else { a=stops[i-1]; b=s; labelText=legText(s); }
+  if(i===0 || s.legIn){
+    legLine.setAttribute("d",`M${a.x},${a.y} L${b.x},${b.y}`);
+    legLine.classList.add("on");
+    placeLabel(legLabel,(a.x+b.x)/2,(a.y+b.y)/2,labelText);
+  } else { legLine.classList.remove("on"); }
+
+  // panel
+  const c=COL[s.cat];
+  let h=`<div class="p-head"><span class="p-name" style="color:${c}">${s.name}</span>`+
+        `<span class="chip" style="color:${c}">${s.stay}</span>`+
+        (s.dates?`<span class="p-dates">${s.dates}</span>`:"")+`</div>`;
+  h+=`<p class="p-blurb">${s.blurb}</p>`;
+  if(s.sleep) h+=`<div class="sleep">🛏 ${s.sleep}</div>`;
+  if(i===0){
+    h+=drow("Drive home","<b>Kings Canyon → San Francisco</b> · "+RETURN.mi+" mi · ~"+RETURN.time+` <span class="via">${RETURN.via}</span>`,"🏁");
+    h+=drow("First leg",`<b>To Monterey</b> · ${stops[1].legIn.mi} mi · ${stops[1].legIn.time}`,"➜");
+  } else if(s.legIn){
+    const v=s.legIn.via?` <span class="via">${s.legIn.via}</span>`:"";
+    const dist=(s.id==="sb")?"≈200 mi · across 2 days":(s.legIn.mi+" mi · "+s.legIn.time);
+    h+=drow("Drive in",`<b>From ${s.legIn.from}</b> · ${dist}${v}`,"🚗");
+    const nx=stops[i+1];
+    if(nx&&nx.legIn) h+=drow("Next",`<b>To ${nx.name}</b> · ${nx.legIn.mi} mi · ${nx.legIn.time}`,"➜");
+    else h+=drow("Next",`<b>Drive home to San Francisco</b> · ${RETURN.mi} mi · ~${RETURN.time}`,"🏁");
+  }
+  h+=`<div class="p-foot"><span class="counter">Stop ${i+1} of ${stops.length}</span></div>`;
+  panel.innerHTML=h;
+  if(window.innerWidth<760) panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+document.getElementById("prev").onclick=()=>select((sel-1+stops.length)%stops.length);
+document.getElementById("next").onclick=()=>select((sel+1)%stops.length);
+const tg=document.getElementById("toggleAll");
+tg.onclick=()=>{const on=allLegs.classList.toggle("on");tg.classList.toggle("on",on);tg.setAttribute("aria-pressed",on);};
+
+select(0);
+</script>
